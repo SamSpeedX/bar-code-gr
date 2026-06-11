@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>Modern Barcode Generator | Multi-format</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- JsBarcode -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8edf5 50%, #f5f7fb 100%);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .card-shadow {
+      box-shadow: 0 20px 40px -12px rgba(0, 20, 50, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .barcode-container {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .barcode-container svg {
+      max-width: 100%;
+      height: auto !important;
+      display: block;
+      border-radius: 12px;
+      padding: 0.5rem;
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      flex-shrink: 0;
+    }
+    
+    .btn-modern {
+      transition: all 0.2s ease;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border-radius: 14px;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    
+    .btn-modern:active {
+      transform: scale(0.96);
+    }
+    
+    .format-radio:checked + label {
+      background: #eef2ff;
+      border-color: #4f46e5;
+      color: #1e3a8a;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+      transform: scale(1.02);
+    }
+    
+    .format-label {
+      transition: all 0.2s ease;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    
+    .format-label:active {
+      transform: scale(0.95);
+    }
+    
+    .glass-card {
+      backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Hide canvas off-screen */
+    #rasterCanvas {
+      position: fixed;
+      top: 0;
+      left: -9999px;
+      visibility: hidden;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      body {
+        padding: 0.75rem;
+        align-items: flex-start;
+        padding-top: 1.5rem;
+      }
+      
+      .glass-card {
+        border-radius: 1.5rem;
+        padding: 1.25rem !important;
+      }
+      
+      .btn-modern {
+        padding-top: 0.875rem;
+        padding-bottom: 0.875rem;
+        font-size: 0.95rem;
+        border-radius: 13px;
+      }
+      
+      .barcode-container svg {
+        padding: 0.25rem;
+        border-radius: 10px;
+      }
+      
+      h1 {
+        font-size: 1.75rem !important;
+      }
+    }
+    
+    @media (max-width: 380px) {
+      body {
+        padding: 0.5rem;
+        padding-top: 1rem;
+      }
+      
+      .glass-card {
+        padding: 1rem !important;
+        border-radius: 1.25rem;
+      }
+      
+      .format-label {
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+        font-size: 0.75rem;
+      }
+      
+      .btn-modern {
+        font-size: 0.875rem;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+      }
+      
+      input[type="text"] {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="w-full max-w-md mx-auto">
+    <div class="glass-card card-shadow rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-white/60 w-full">
+      
+      <!-- Header -->
+      <div class="text-center mb-5 sm:mb-6">
+        <div class="mx-auto w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200/60 mb-3 sm:mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-7 sm:w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2m0 0H8m4-7V4m-4 7h8M5 11h2m11 0h2M7 11h10" />
+          </svg>
+        </div>
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 tracking-tight">Barcode Generator</h1>
+        <p class="text-gray-500 text-xs sm:text-sm mt-1.5 font-medium">Generate & download in multiple formats</p>
+      </div>
+
+      <!-- Input field -->
+      <div class="relative mb-4 sm:mb-5">
+        <input
+          type="text"
+          id="barcodeText"
+          placeholder="Enter product code or value"
+          class="w-full bg-white/95 border border-gray-200 rounded-xl sm:rounded-2xl px-4 py-3 sm:px-5 sm:py-4 text-gray-800 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm sm:text-base font-medium transition-all"
+          autocomplete="off"
+          inputmode="text"
+        />
+      </div>
+
+      <!-- Format selection -->
+      <div class="mb-4 sm:mb-5">
+        <label class="text-xs sm:text-sm font-semibold text-gray-600 mb-2 flex items-center gap-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Download format
+        </label>
+        <div class="grid grid-cols-4 gap-1.5 sm:gap-2 mt-1.5 sm:mt-2">
+          <input type="radio" id="formatSVG" name="imageFormat" value="svg" class="hidden format-radio" checked />
+          <label for="formatSVG" class="format-label border border-gray-200 rounded-lg sm:rounded-xl py-2 sm:py-3 px-1 text-center text-xs sm:text-sm font-medium bg-white/70 hover:bg-gray-50 transition-all flex flex-col items-center gap-0.5 sm:gap-1">
+            <span class="text-base sm:text-lg">🔤</span> SVG
+          </label>
+          
+          <input type="radio" id="formatPNG" name="imageFormat" value="png" class="hidden format-radio" />
+          <label for="formatPNG" class="format-label border border-gray-200 rounded-lg sm:rounded-xl py-2 sm:py-3 px-1 text-center text-xs sm:text-sm font-medium bg-white/70 hover:bg-gray-50 transition-all flex flex-col items-center gap-0.5 sm:gap-1">
+            <span class="text-base sm:text-lg">🖼️</span> PNG
+          </label>
+          
+          <input type="radio" id="formatJPG" name="imageFormat" value="jpg" class="hidden format-radio" />
+          <label for="formatJPG" class="format-label border border-gray-200 rounded-lg sm:rounded-xl py-2 sm:py-3 px-1 text-center text-xs sm:text-sm font-medium bg-white/70 hover:bg-gray-50 transition-all flex flex-col items-center gap-0.5 sm:gap-1">
+            <span class="text-base sm:text-lg">📸</span> JPG
+          </label>
+          
+          <input type="radio" id="formatWebP" name="imageFormat" value="webp" class="hidden format-radio" />
+          <label for="formatWebP" class="format-label border border-gray-200 rounded-lg sm:rounded-xl py-2 sm:py-3 px-1 text-center text-xs sm:text-sm font-medium bg-white/70 hover:bg-gray-50 transition-all flex flex-col items-center gap-0.5 sm:gap-1">
+            <span class="text-base sm:text-lg">🌐</span> WebP
+          </label>
+        </div>
+      </div>
+
+      <!-- Generate button -->
+      <button
+        onclick="generateBarcode()"
+        class="btn-modern w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-lg shadow-indigo-500/30 text-base sm:text-lg font-semibold mb-4 sm:mb-5"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+        </svg>
+        Generate Barcode
+      </button>
+
+      <!-- Barcode display area -->
+      <div class="flex justify-center items-center bg-gray-50/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 min-h-[120px] sm:min-h-[150px] transition-all overflow-x-auto" id="barcodeWrapper">
+        <div class="barcode-container w-full flex justify-center" id="barcodeContainer">
+          <svg id="barcode" class="transition-opacity duration-300"></svg>
+        </div>
+        <div id="placeholderHint" class="text-gray-400 text-xs sm:text-sm flex flex-col items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 sm:h-10 sm:w-10 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2m0 0H8m4-7V4m-4 7h8M5 11h2m11 0h2M7 11h10" />
+          </svg>
+          <span>Barcode preview</span>
+        </div>
+      </div>
+
+      <!-- Download button -->
+      <button
+        onclick="downloadBarcode()"
+        class="btn-modern w-full mt-3 sm:mt-5 bg-white border-2 border-gray-200 hover:border-indigo-400 hover:bg-indigo-50/70 text-gray-800 hover:text-indigo-700 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md font-semibold transition-all text-sm sm:text-base"
+        id="downloadButton"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+        </svg>
+        <span id="downloadLabel">Download SVG</span>
+      </button>
+      
+      <p class="text-center text-xs text-gray-400 mt-3 sm:mt-4">CODE128 · high quality output</p>
+    </div>
+  </div>
+
+  <!-- Hidden canvas for raster conversion -->
+  <canvas id="rasterCanvas" width="800" height="400"></canvas>
+
+  <script>
+    (function() {
+      const barcodeTextInput = document.getElementById('barcodeText');
+      const barcodeSVG = document.getElementById('barcode');
+      const placeholderHint = document.getElementById('placeholderHint');
+      const downloadLabel = document.getElementById('downloadLabel');
+      const rasterCanvas = document.getElementById('rasterCanvas');
+      const barcodeWrapper = document.getElementById('barcodeWrapper');
+      
+      // Get selected format
+      function getSelectedFormat() {
+        const selected = document.querySelector('input[name="imageFormat"]:checked');
+        return selected ? selected.value : 'svg';
+      }
+
+      // Update download button text
+      function updateDownloadLabel() {
+        const format = getSelectedFormat().toUpperCase();
+        if (downloadLabel) {
+          downloadLabel.textContent = `Download ${format}`;
+        }
+      }
+
+      // Listen to format changes
+      document.querySelectorAll('input[name="imageFormat"]').forEach(radio => {
+        radio.addEventListener('change', updateDownloadLabel);
+      });
+      updateDownloadLabel();
+
+      // Generate barcode
+      window.generateBarcode = function() {
+        const value = barcodeTextInput.value.trim();
+        barcodeSVG.innerHTML = '';
+        
+        if (!value) {
+          if (placeholderHint) placeholderHint.style.display = 'flex';
+          barcodeSVG.style.display = 'none';
+          barcodeTextInput.focus();
+          // Visual feedback
+          barcodeTextInput.style.borderColor = '#f87171';
+          setTimeout(() => { barcodeTextInput.style.borderColor = ''; }, 1500);
+          return;
+        }
+        
+        if (placeholderHint) placeholderHint.style.display = 'none';
+        barcodeSVG.style.display = 'block';
+        
+        try {
+          JsBarcode("#barcode", value, {
+            format: "CODE128",
+            lineColor: "#111827",
+            width: 2,
+            height: 80,
+            displayValue: true,
+            font: "Inter, sans-serif",
+            fontSize: 14,
+            textMargin: 6,
+            margin: 10,
+            background: "#ffffff",
+            valid: function(valid) {
+              if (!valid) {
+                alert("Invalid characters for CODE128. Please use standard text/numbers.");
+                barcodeSVG.innerHTML = '';
+                if (placeholderHint) placeholderHint.style.display = 'flex';
+                barcodeSVG.style.display = 'none';
+              }
+            }
+          });
+          
+          // Make SVG responsive
+          const svgElement = document.querySelector('#barcode');
+          if (svgElement) {
+            svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            svgElement.style.maxWidth = '100%';
+            svgElement.style.height = 'auto';
+            svgElement.style.width = 'auto';
+          }
+          
+          // Scroll to show barcode on mobile
+          setTimeout(() => {
+            barcodeWrapper.scrollLeft = barcodeWrapper.scrollWidth;
+          }, 50);
+          
+        } catch (error) {
+          console.error("Barcode error:", error);
+          alert("Could not generate barcode. Please check input.");
+          if (placeholderHint) placeholderHint.style.display = 'flex';
+          barcodeSVG.style.display = 'none';
+        }
+      };
+
+      // Convert SVG to raster format
+      function convertSVGtoRaster(svgElement, format, quality = 0.92) {
+        return new Promise((resolve, reject) => {
+          const svgData = new XMLSerializer().serializeToString(svgElement);
+          const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(svgBlob);
+          
+          const img = new Image();
+          img.onload = function() {
+            const canvas = rasterCanvas;
+            const scaleFactor = 2;
+            canvas.width = img.width * scaleFactor;
+            canvas.height = img.height * scaleFactor;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            let mimeType = 'image/png';
+            if (format === 'jpg') mimeType = 'image/jpeg';
+            else if (format === 'webp') mimeType = 'image/webp';
+            
+            canvas.toBlob((blob) => {
+              URL.revokeObjectURL(url);
+              if (blob) resolve(blob);
+              else reject(new Error('Canvas conversion failed'));
+            }, mimeType, quality);
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Image load failed'));
+          };
+          img.src = url;
+        });
+      }
+
+      // Download function
+      window.downloadBarcode = async function() {
+        const svg = document.getElementById("barcode");
+        if (!svg || !svg.innerHTML || svg.style.display === 'none') {
+          alert("Please generate a valid barcode first.");
+          if (barcodeTextInput.value.trim() === '') {
+            barcodeTextInput.focus();
+          }
+          return;
+        }
+
+        const format = getSelectedFormat();
+        const barcodeValue = barcodeTextInput.value.trim().replace(/[^a-z0-9]/gi, '_').substring(0, 20) || 'barcode';
+        
+        try {
+          if (format === 'svg') {
+            const serializer = new XMLSerializer();
+            let source = serializer.serializeToString(svg);
+            if (!source.match(/^<\?xml/)) {
+              source = '<?xml version="1.0" encoding="UTF-8"?>\n' + source;
+            }
+            const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+            triggerDownload(blob, `barcode_${barcodeValue}.svg`);
+          } else {
+            const blob = await convertSVGtoRaster(svg, format, 0.95);
+            let extension = format === 'jpg' ? 'jpg' : format === 'webp' ? 'webp' : 'png';
+            triggerDownload(blob, `barcode_${barcodeValue}.${extension}`);
+          }
+        } catch (error) {
+          console.error("Download error:", error);
+          alert("Download failed. Please try again.");
+        }
+      };
+
+      function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 150);
+      }
+
+      // Initialize on load
+      window.onload = function() {
+        barcodeTextInput.value = '1234567890';
+        if (placeholderHint) placeholderHint.style.display = 'none';
+        barcodeSVG.style.display = 'block';
+        
+        setTimeout(() => generateBarcode(), 30);
+        
+        // Enter key support
+        barcodeTextInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            generateBarcode();
+          }
+        });
+        
+        // Handle placeholder visibility
+        const observer = new MutationObserver(() => {
+          if (barcodeSVG.innerHTML.trim() === '' && barcodeTextInput.value.trim() === '') {
+            if (placeholderHint) placeholderHint.style.display = 'flex';
+            barcodeSVG.style.display = 'none';
+          }
+        });
+        observer.observe(barcodeSVG, { childList: true, subtree: true });
+        
+        // Handle resize for barcode responsiveness
+        window.addEventListener('resize', () => {
+          if (barcodeSVG && barcodeSVG.innerHTML.trim() !== '') {
+            barcodeSVG.style.maxWidth = '100%';
+            barcodeSVG.style.height = 'auto';
+            barcodeSVG.style.width = 'auto';
+          }
+        });
+        
+        // Improve mobile touch targets
+        const allButtons = document.querySelectorAll('button, .format-label');
+        allButtons.forEach(el => {
+          el.addEventListener('touchstart', function() {
+            // Just to improve mobile responsiveness
+          }, { passive: true });
+        });
+      };
+    })();
+  </script>
+</body>
+</html>
